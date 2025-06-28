@@ -1,0 +1,5 @@
+Django==5.2.3
+djangorestframework==3.16.0
+drf-spectacular==0.28.0
+gunicorn==21.2.0
+

@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+  title: HR Employee Search API
+  version: 1.0.0
+  description: A Django REST API for searching employees within organizations with
+    rate limiting and configurable column display
+paths:
+  /api/v1/health/:
+    get:
+      operationId: health_retrieve
+      description: Health check endpoint
+      tags:
+      - health
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/organizations/:
+    get:
+      operationId: organizations_retrieve
+      description: List all active organizations
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/organizations/{organization_id}/config/:
+    get:
+      operationId: organizations_config_retrieve
+      description: Get organization configuration including visible columns
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organizations
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/organizations/{organization_id}/employees/search/:
+    get:
+      operationId: search_employees
+      description: Search and filter employees within a specific organization with
+        configurable column display
+      summary: Search employees within an organization
+      parameters:
+      - in: query
+        name: department
+        schema:
+          type: string
+        description: Filter by department
+      - in: query
+        name: location
+        schema:
+          type: string
+        description: Filter by location
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the organization
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+          default: 1
+        description: Page number
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+          default: 50
+        description: Number of results per page (max 100)
+      - in: query
+        name: position
+        schema:
+          type: string
+        description: Filter by position
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Search in first name, last name, and email
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - active
+          - inactive
+          - on_leave
+          - terminated
+        description: Filter by status
+      tags:
+      - Employee Search
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DynamicEmployee'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+components:
+  schemas:
+    DynamicEmployee:
+      type: object
+      description: Dynamic serializer that respects organization column configuration
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+        department:
+          type: string
+          maxLength: 100
+        position:
+          type: string
+          maxLength: 100
+        location:
+          type: string
+          maxLength: 100
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        hire_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: string
+          format: uuid
+      required:
+      - created_at
+      - department
+      - email
+      - first_name
+      - full_name
+      - hire_date
+      - id
+      - last_name
+      - location
+      - organization
+      - position
+      - updated_at
+    StatusEnum:
+      enum:
+      - active
+      - inactive
+      - terminated
+      - on_leave
+      type: string
+      description: |-
+        * `active` - Active
+        * `inactive` - Inactive
+        * `terminated` - Terminated
+        * `on_leave` - On Leave
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
