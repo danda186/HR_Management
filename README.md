@@ -27,7 +27,7 @@ A Django REST API microservice for searching employees within organizations with
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/danda186/hr_backend.git
    cd hr_backend
    ```
 
